@@ -81,7 +81,7 @@ class OverviewController extends Controller
 
         $this->view->title = 'Legacy Overall';
 
-        $this->view->counts = json_encode($counts, JSON_PRETTY_PRINT);
+        $this->view->counts = $counts;
         $this->view->files = $files;
     }
 

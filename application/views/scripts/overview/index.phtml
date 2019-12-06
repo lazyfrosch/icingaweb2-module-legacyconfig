@@ -5,16 +5,14 @@
     <h1><?= $this->title ?></h1>
 
     <h2>Counters</h2>
-    <pre><?= $this->counts ?></pre>
-    <?php /*
-    <table>
-    <?php foreach($this->counts as $type => $count): ?>
-    <tr>
-        <th><?= $type ?></th><td><?= $count ?></td>
-    </tr>
+    <?php foreach($this->counts as $type => $info): ?>
+    <h3><?= $this->keywords($type) ?></h3>
+    <ul>
+    <?php foreach($info as $key => $value): ?>
+    <li><strong><?= $this->keywords($key) ?>:</strong> <?= $value ?></li>
     <?php endforeach; ?>
-    </table>
- */ ?>
+    </ul>
+    <?php endforeach; ?>
 
     <h2>Files</h2>
     <ul>
