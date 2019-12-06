@@ -1,0 +1,25 @@
+<div class="controls">
+    <?= $this->tabs ?>
+</div>
+<div class="content">
+    <h1><?= $this->title ?></h1>
+
+    <h2>Counters</h2>
+    <pre><?= $this->counts ?></pre>
+    <?php /*
+    <table>
+    <?php foreach($this->counts as $type => $count): ?>
+    <tr>
+        <th><?= $type ?></th><td><?= $count ?></td>
+    </tr>
+    <?php endforeach; ?>
+    </table>
+ */ ?>
+
+    <h2>Files</h2>
+    <ul>
+    <?php foreach($this->files as $file): ?>
+        <li><?= $file ?></li>
+    <?php endforeach; ?>
+    </ul>
+</div>
