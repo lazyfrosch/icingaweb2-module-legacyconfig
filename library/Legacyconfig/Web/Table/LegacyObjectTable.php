@@ -226,6 +226,8 @@ class LegacyObjectTable extends SimpleQueryBasedTable
             return $this->$helperfunc($value);
         } elseif (is_object($value)) {
             return $this->renderObjectColumn($value);
+        } elseif (is_array($value)) {
+            return join(', ', $value);
         } else {
             return $value;
         }
