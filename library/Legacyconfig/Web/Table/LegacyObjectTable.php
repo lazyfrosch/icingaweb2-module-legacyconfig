@@ -40,6 +40,8 @@ class LegacyObjectTable extends SimpleQueryBasedTable
 
     const IMPORT_ATTRIBUTE = 'use';
 
+    protected $ellipsesTable = true;
+
     public function __construct($objects, $keyColumn = 'name')
     {
         $this->objects = $objects;
@@ -137,6 +139,39 @@ class LegacyObjectTable extends SimpleQueryBasedTable
     {
         $this->prioritiesColumns = $prioritiesColumns;
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isEllipsesTable()
+    {
+        return $this->ellipsesTable;
+    }
+
+    /**
+     * @param bool $ellipsesTable
+     *
+     * @return LegacyObjectTable
+     */
+    public function setEllipsesTable($ellipsesTable = true)
+    {
+        $this->ellipsesTable = $ellipsesTable;
+        return $this;
+    }
+
+    public function getAttributes()
+    {
+        parent::getAttributes();
+
+        $class = $this->attributes->get('class');
+        $class->removeValue('cell-ellipsis');
+
+        if ($this->isEllipsesTable()) {
+            $class->addValue('cell-ellipsis');
+        }
+
+        return $this->attributes;
     }
 
     protected function renderObjectColumn($object)

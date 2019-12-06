@@ -93,7 +93,8 @@ class OverviewController extends Controller
 
         $this->view->title = 'Legacy Commands';
 
-        $this->view->objects = new LegacyObjectTable($objects, 'command_name');
+        $this->view->objects = $objectTable = new LegacyObjectTable($objects, 'command_name');
+        $objectTable->setEllipsesTable(false);
 
         // TODO: can be determine used commands here?
 
