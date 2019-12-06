@@ -85,157 +85,83 @@ class OverviewController extends Controller
         $this->view->files = $files;
     }
 
-    public function commandsAction()
+    protected function handleObjectList($type, $keyColumn = null, $usage = true)
     {
         $parser = $this->parser();
 
-        $objects = $parser->getObjects('command');
+        $objects = $parser->getObjects($type);
+        $templates = $parser->getTemplates($type);
+        $used = $parser->getUsed($type);
 
-        $this->view->title = 'Legacy Commands';
+        if ($keyColumn === null) {
+            $keyColumn = $type . '_name';
+        }
 
-        $this->view->objects = $objectTable = new LegacyObjectTable($objects, 'command_name');
-        $objectTable->setEllipsesTable(false);
+        $this->view->objects = $objectTable = new LegacyObjectTable($objects, $keyColumn);
+        if (! empty($templates)) {
+            $this->view->templates = $templateTable = new LegacyObjectTable($templates);
+            $templateTable->setObjectsUsed($used);
+        }
 
-        // TODO: can be determine used commands here?
+        if ($usage) {
+            $objectTable->setObjectsUsed($used);
+        }
+
+        $this->view->title = 'Legacy ' . ucfirst($type);
 
         $this->setViewScript('objects');
+        return $parser;
+    }
+
+    public function commandsAction()
+    {
+        $this->handleObjectList('command');
+
+        $this->view->objects->setEllipsesTable(false);
     }
 
     public function hostsAction()
     {
-        $parser = $this->parser();
-
-        $templates = $parser->getTemplates('host');
-        $objects = $parser->getObjects('host');
-
-        $this->view->title = 'Legacy Hosts';
-
-        $this->view->templates = $templateTable = new LegacyObjectTable($templates);
-        $this->view->objects = new LegacyObjectTable($objects, 'host_name');
-
-        // Mark used templates in table
-        // TODO: implement indexing into LegacyConfigParser
-        foreach ([$templates, $objects] as $arr) {
-            foreach ($arr as $object) {
-                if (property_exists($object, 'use')) {
-                    $templateTable->markObjectUsed($object->use);
-                }
-            }
-        }
-
-        $this->setViewScript('objects');
+        $this->handleObjectList('host', null, false);
     }
 
     public function hostgroupsAction()
     {
-        $parser = $this->parser();
-
-        $objects = $parser->getObjects('hostgroup');
-
-        $this->view->title = 'Legacy Hostgroups';
-
-        $this->view->objects = new LegacyObjectTable($objects, 'hostgroup_name');
-
-        // TODO: unused
-
-        $this->setViewScript('objects');
+        $this->handleObjectList('hostgroup');
     }
 
     public function servicesAction()
     {
-        $parser = $this->parser();
+        $this->handleObjectList('service', 'service_description', false);
 
-        $templates = $parser->getTemplates('service');
-        $objects = $parser->getObjects('service');
-
-        $this->view->title = 'Legacy Services';
-
-        $this->view->templates = $templateTable = new LegacyObjectTable($templates);
-        // TODO: duplicate service_descriptions!
-        $this->view->objects = $objectsTable = new LegacyObjectTable($objects, 'service_description');
-
-        $objectsTable->setPrioritiesColumns(['host_name', 'hostgroup_name']);
-
-        // TODO: implement unsed
-        $this->setViewScript('objects');
+        $this->view->objects->setPrioritiesColumns(['host_name', 'hostgroup_name']);
     }
 
     public function servicegroupsAction()
     {
-        $parser = $this->parser();
-
-        $objects = $parser->getObjects('servicegroup');
-
-        $this->view->title = 'Legacy Contactgroups';
-
-        $this->view->objects = new LegacyObjectTable($objects, 'servicegroup_name');
-
-        // TODO: unused
-
-        $this->setViewScript('objects');
+        $this->handleObjectList('servicegroup');
     }
 
     public function servicedependencysAction()
     {
-        $parser = $this->parser();
+        $this->handleObjectList('servicedependency', 'service_description', false);
 
-        $objects = $parser->getObjects('servicedependency');
-
-        $this->view->title = 'Legacy Servicedependency';
-
-        $this->view->objects = $objectsTable = new LegacyObjectTable($objects, 'service_description');
-
-        $objectsTable->setPrioritiesColumns(['host_name', 'hostgroup_name']);
-
-        // TODO: unused
-
-        $this->setViewScript('objects');
+        $this->view->objects->setPrioritiesColumns(['host_name', 'hostgroup_name']);
     }
 
     public function contactsAction()
     {
-        $parser = $this->parser();
-
-        $templates = $parser->getTemplates('contact');
-        $objects = $parser->getObjects('contact');
-
-        $this->view->title = 'Legacy Contacts';
-
-        $this->view->templates = new LegacyObjectTable($templates);
-        $this->view->objects = new LegacyObjectTable($objects, 'contact_name');
-
-        // TODO: implement unsed
-        $this->setViewScript('objects');
+        $this->handleObjectList('contact');
     }
 
     public function contactgroupsAction()
     {
-        $parser = $this->parser();
-
-        $objects = $parser->getObjects('contactgroup');
-
-        $this->view->title = 'Legacy Contactgroups';
-
-        $this->view->objects = new LegacyObjectTable($objects, 'contactgroup_name');
-
-        // TODO: unused
-
-        $this->setViewScript('objects');
+        $this->handleObjectList('contactgroup');
     }
 
     public function timeperiodsAction()
     {
-        $parser = $this->parser();
-
-        $objects = $parser->getObjects('timeperiod');
-
-        $this->view->title = 'Legacy Timeperiods';
-
-        $this->view->objects = new LegacyObjectTable($objects, 'timeperiod_name');
-
-        // TODO: unused
-
-        $this->setViewScript('objects');
+        $this->handleObjectList('timeperiod');
     }
 
     protected function parser()

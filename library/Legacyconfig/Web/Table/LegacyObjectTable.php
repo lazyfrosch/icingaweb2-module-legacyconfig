@@ -63,6 +63,12 @@ class LegacyObjectTable extends SimpleQueryBasedTable
         return $this;
     }
 
+    public function setObjectsUsed($names)
+    {
+        $this->objectsInUse = $names;
+        return $this;
+    }
+
     public function getColumns()
     {
         if ($this->columns === null) {
