@@ -69,6 +69,7 @@ class LegacyConfigParser
         $lines = preg_split('~\r?\n~', $content);
 
         $inBlock = null;
+        /** @var object|null $attr */
         $attr = null;
         $lineno = 0;
 
@@ -88,7 +89,26 @@ class LegacyConfigParser
                     // key value
                     $value = trim($m[2]);
                     $value = preg_replace('~\s[#;].*~', '', $value);
-                    $attr->{$m[1]} = trim($value);
+
+                    $key = $m[1];
+                    $value = trim($value);
+
+                    if ($inBlock === 'timeperiod') {
+                        // special handling for timeperiod to collect ranges
+                        if (
+                            substr($key, 0, 10) !== 'timeperiod'
+                            && ! in_array($key, ['name', 'alias', 'use', 'exclude', 'include', 'register'])
+                        ) {
+                            if (! property_exists($attr, 'ranges')) {
+                                $attr->ranges = [];
+                            }
+                            $attr->ranges[] = $key . ' ' . $value;
+                        } else {
+                            $attr->{$key} = $value;
+                        }
+                    } else {
+                        $attr->{$key} = $value;
+                    }
                 } elseif (preg_match('~^\s*\}\s*$~', $line)) {
                     // end of block
                     $this->storeObject($inBlock, $attr);
