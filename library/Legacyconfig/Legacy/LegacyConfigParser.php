@@ -125,9 +125,28 @@ class LegacyConfigParser
             $attr->vars = (object) $vars;
         }
 
-        if (property_exists($attr, 'register') && $attr->register === '0') {
+        // Exceptions to detect templates based on attributes been set
+        $nameAttr = null;
+        switch ($type) {
+            case 'host':
+            case 'contact':
+                $nameAttr = $type . '_name';
+                break;
+            case 'service':
+                $nameAttr = 'service_description';
+                break;
+        }
+
+        if (
+            property_exists($attr, 'register') && $attr->register === '0'
+            || ! empty ($nameAttr) && ! property_exists($attr, $nameAttr) // fallback that doesn't require register to be set
+        ) {
             if (! array_key_exists($type, $this->templates)) {
                 $this->templates[$type] = [];
+            }
+
+            if (! property_exists($attr, 'name') && ! empty($nameAttr) && property_exists($attr, $nameAttr)) {
+                $attr->name = $attr->{$nameAttr};
             }
 
             $this->templates[$type][] = $attr;
