@@ -151,7 +151,34 @@ class OverviewController extends Controller
 
     public function contactsAction()
     {
-        $this->handleObjectList('contact');
+        $parser = $this->handleObjectList('contact');
+
+        $templateUsage = $parser->getTemplateUsage('contact');
+        $templates = $parser->getTemplates('contact');
+        $used = $parser->getUsed('contact');
+
+        /** @var LegacyObjectTable $templateTable */
+        $templateTable = $this->view->templates;
+
+        // Detect templates where all objects are unused
+        // This is specific for contacts only
+        foreach ($templates as $template) {
+            $name = $template->name;
+            if (! array_key_exists($name, $templateUsage)) {
+                $templateTable->unmarkObjectUsed($name);
+            } else {
+                $isUsed = false;
+                foreach ($templateUsage[$name] as $usage) {
+                    if (array_key_exists($usage, $used)) {
+                        $isUsed = true;
+                        break;
+                    }
+                }
+                if ($isUsed === false) {
+                    $templateTable->unmarkObjectUsed($name);
+                }
+            }
+        }
     }
 
     public function contactgroupsAction()

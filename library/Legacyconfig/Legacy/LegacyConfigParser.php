@@ -18,6 +18,8 @@ class LegacyConfigParser
 
     protected $used = [];
 
+    protected $templateUsage = [];
+
     public function parseFile($path)
     {
         $file = realpath($path);
@@ -196,10 +198,22 @@ class LegacyConfigParser
 
     protected function detectUsage($type, &$attr)
     {
+        $nameAttr = $type . '_name';
+
         foreach ($attr as $k => $v) {
             switch ($k) {
                 case 'use':
                     $this->markUsed($type, $v);
+
+                    // Count which templates are used by what object
+                    // Only for contacts currently
+                    if ($type === 'contact') {
+                        if (property_exists($attr, $nameAttr)) {
+                            $this->markTemplateUsed($type, $v, $attr->$nameAttr);
+                        } elseif (property_exists($attr, 'name')) {
+                            $this->markTemplateUsed($type, $v, $attr->name);
+                        }
+                    }
                     break;
                 case 'check_command':
                 case 'event_handler':
@@ -236,7 +250,6 @@ class LegacyConfigParser
             }
         }
 
-        $nameAttr = $type . '_name';
         if ($type === 'contactgroup') {
             if (property_exists($attr, 'members') && ! empty($attr->members)) {
                 $memberType = substr($type, 0, -5);
@@ -316,6 +329,37 @@ class LegacyConfigParser
             }
         } else {
             return $this->used;
+        }
+    }
+
+    protected function markTemplateUsed($type, $template, $name)
+    {
+        if (! array_key_exists($type, $this->templateUsage)) {
+            $this->templateUsage[$type] = [];
+        }
+        if (! array_key_exists($template, $this->templateUsage[$type])) {
+            $this->templateUsage[$type][$template] = [];
+        }
+
+        $this->templateUsage[$type][$template][$name] = $name;
+
+        return $this;
+    }
+
+    public function getTemplateUsage($type, $template = null)
+    {
+        if (! array_key_exists($type, $this->templateUsage)) {
+            return [];
+        }
+
+        if ($template !== null) {
+            if (array_key_exists($template, $this->templateUsage[$type])) {
+                return $this->templateUsage[$type][$template];
+            } else {
+                return [];
+            }
+        } else {
+            return $this->templateUsage[$type];
         }
     }
 }

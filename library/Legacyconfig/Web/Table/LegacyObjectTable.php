@@ -63,6 +63,16 @@ class LegacyObjectTable extends SimpleQueryBasedTable
         return $this;
     }
 
+    public function unmarkObjectUsed($name)
+    {
+        if ($this->objectsInUse !== null) {
+            if (array_key_exists($name, $this->objectsInUse)) {
+                unset($this->objectsInUse[$name]);
+            }
+        }
+        return $this;
+    }
+
     public function setObjectsUsed($names)
     {
         $this->objectsInUse = $names;
