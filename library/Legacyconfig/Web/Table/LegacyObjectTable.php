@@ -188,6 +188,8 @@ class LegacyObjectTable extends SimpleQueryBasedTable
         }
 
         $value = clone $value;
+
+        // hide protected values
         foreach ($value as $k => $v) {
             foreach ($this->protectVars as $protected) {
                 if (strpos($k, $protected) !== false) {
@@ -197,7 +199,12 @@ class LegacyObjectTable extends SimpleQueryBasedTable
             }
         }
 
-        return $this->renderObjectColumn($value);
+        $str = '';
+        foreach ($value as $k => $v) {
+            $str .= sprintf("%s: %s\n", $k, $v);
+        }
+
+        return Html::tag('pre', $str);
     }
 
     /** @noinspection PhpUnused */
