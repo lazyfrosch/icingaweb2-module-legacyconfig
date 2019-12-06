@@ -16,6 +16,8 @@ class LegacyConfigParser
 
     protected $templates = [];
 
+    protected $used = [];
+
     public function parseFile($path)
     {
         $file = realpath($path);
@@ -131,6 +133,16 @@ class LegacyConfigParser
         }
     }
 
+    public static function splitList($string)
+    {
+        return preg_split('~\s*,\s*~', trim($string));
+    }
+
+    public static function splitCommand($string)
+    {
+        return preg_split('~\s*!\s*~', trim($string));
+    }
+
     protected function storeObject($type, $attr)
     {
         // rebuild vars to an object
@@ -144,6 +156,9 @@ class LegacyConfigParser
         if (! empty($vars)) {
             $attr->vars = (object) $vars;
         }
+
+        // check for object referenced to be marked used
+        $this->detectUsage($type, $attr);
 
         // Exceptions to detect templates based on attributes been set
         $nameAttr = null;
@@ -179,6 +194,77 @@ class LegacyConfigParser
         }
     }
 
+    protected function detectUsage($type, &$attr)
+    {
+        foreach ($attr as $k => $v) {
+            switch ($k) {
+                case 'use':
+                    $this->markUsed($type, $v);
+                    break;
+                case 'check_command':
+                case 'event_handler':
+                    $command = static::splitCommand($v);
+                    $this->markUsed('command', $command[0]);
+                    break;
+                case 'host_notification_commands':
+                case 'service_notification_commands':
+                    foreach (static::splitList($v) as $command) {
+                        $this->markUsed('command', $command);
+                    }
+                    break;
+                case 'check_period':
+                case 'notification_period':
+                case 'host_notification_period':
+                case 'service_notification_period':
+                    $this->markUsed('timeperiod', $v);
+                    break;
+                case 'hostgroups':
+                    foreach (static::splitList($v) as $group) {
+                        $this->markUsed('hostgroup', $group);
+                    }
+                    break;
+                case 'servicegroups':
+                    foreach (static::splitList($v) as $group) {
+                        $this->markUsed('servicegroup', $group);
+                    }
+                    break;
+                case 'contact_groups':
+                    foreach (static::splitList($v) as $group) {
+                        $this->markUsed('contactgroup', $group);
+                    }
+                    break;
+            }
+        }
+
+        $nameAttr = $type . '_name';
+        if ($type === 'contactgroup') {
+            if (property_exists($attr, 'members') && ! empty($attr->members)) {
+                $memberType = substr($type, 0, -5);
+
+                foreach (static::splitList($attr->members) as $member) {
+                    $this->markUsed($memberType, $member);
+                }
+            }
+        } elseif ($type === 'hostgroup' || $type === 'servicegroup') {
+            if (property_exists($attr, 'members') && ! empty($attr->members)) {
+                $this->markUsed($type, $attr->{$nameAttr});
+            }
+        }
+
+        if ($type === 'hostgroup' || $type === 'servicegroup' || $type === 'contactgroup') {
+            $groupMemberAttr = $type . '_members';
+            if (property_exists($attr, $groupMemberAttr) && ! empty($attr->$groupMemberAttr)) {
+                if ($type !== 'contactgroup') {
+                    $this->markUsed($type, $attr->$nameAttr);
+                }
+
+                foreach (static::splitList($attr->{$groupMemberAttr}) as $member) {
+                    $this->markUsed($type, $member);
+                }
+            }
+        }
+    }
+
     public function getFiles()
     {
         return array_keys($this->files);
@@ -207,6 +293,29 @@ class LegacyConfigParser
             }
         } else {
             return $this->templates;
+        }
+    }
+
+    protected function markUsed($type, $name)
+    {
+        if (! array_key_exists($type, $this->used)) {
+            $this->used[$type] = [];
+        }
+
+        $this->used[$type][$name] = $name;
+        return $this;
+    }
+
+    public function getUsed($type = null)
+    {
+        if ($type !== null) {
+            if (array_key_exists($type, $this->used)) {
+                return $this->used[$type];
+            } else {
+                return [];
+            }
+        } else {
+            return $this->used;
         }
     }
 }
