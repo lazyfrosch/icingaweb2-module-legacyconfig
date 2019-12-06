@@ -1,4 +1,5 @@
 <?php
+/* NETWAYS modules for Icingaweb2 - Copyright (c) 2019 NETWAYS GmbH <info@netways.de> */
 
 namespace Icinga\Module\Legacyconfig\Web\Table;
 
