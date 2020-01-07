@@ -208,8 +208,9 @@ class LegacyObjectTable extends SimpleQueryBasedTable
 
         // hide protected values
         foreach ($value as $k => $v) {
+            $lower = strtolower($k);
             foreach ($this->protectVars as $protected) {
-                if (strpos($k, $protected) !== false) {
+                if (strpos($lower, $protected) !== false) {
                     $value->{$k} = '***';
                     break;
                 }
